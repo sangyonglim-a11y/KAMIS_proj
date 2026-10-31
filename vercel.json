@@ -1,16 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
+  "framework": "nextjs",
+  "regions": ["icn1"],
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 60,
-      "includeFiles": "server/**"
+    "app/api/**/*.ts": {
+      "maxDuration": 60
     }
   }
 }
