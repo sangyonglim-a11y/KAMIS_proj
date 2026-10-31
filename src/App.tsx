@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { addItem, fetchCatalog, fetchHealth, fetchSheet } from "./api";
+import { addItem, fetchCatalog, fetchSheet } from "./api";
 import { AddItemModal } from "./components/AddItemModal";
 import { AiCard } from "./components/AiCard";
 import { DetailCard } from "./components/DetailCard";
@@ -8,11 +8,10 @@ import { Header } from "./components/Header";
 import { ItemChips } from "./components/ItemChips";
 import { PeriodToggle } from "./components/PeriodToggle";
 import { PriceChart } from "./components/PriceChart";
-import type { CatalogItem, Detail, Health, Period, SheetResponse } from "./types";
+import type { CatalogItem, Detail, Period, SheetResponse } from "./types";
 
 export default function App() {
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-  const [health, setHealth] = useState<Health | null>(null);
   const [itemId, setItemId] = useState("sangchu");
   const [period, setPeriod] = useState<Period>("1m");
   const [data, setData] = useState<SheetResponse | null>(null);
@@ -27,9 +26,8 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       try {
-        const [items, h] = await Promise.all([fetchCatalog(), fetchHealth()]);
+        const items = await fetchCatalog();
         setCatalog(items);
-        setHealth(h);
       } catch {
         setErrorMsg("서버에 연결하지 못했습니다. npm run dev로 API(3001)와 Vite를 함께 켜 주세요.");
       }
@@ -64,15 +62,6 @@ export default function App() {
     const t = window.setTimeout(() => setToast(null), 7000);
     return () => window.clearTimeout(t);
   }, [toast]);
-
-  const sourceLabel = useMemo(() => {
-    if (data?.source === "sheet") return "구글 시트 도매가 · 매입 예측";
-    if (data?.source === "local") return "로컬 저장 도매가 · 매입 예측";
-    if (data?.source === "public") return "공공데이터포털 일별 도매가";
-    if (health?.sheet) return "구글 시트 도매가 · 매입 예측";
-    if (health?.publicData) return "공공데이터포털 일별 도매가";
-    return "KAMIS 도매 시세";
-  }, [data, health]);
 
   const visibleItems = useMemo(() => {
     if (!catalog.length) return [];
@@ -136,7 +125,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Header sourceLabel={sourceLabel} onAdd={() => setModalOpen(true)} />
+      <Header sourceLabel="gogiparty. 매입 예측" onAdd={() => setModalOpen(true)} />
 
       <main className="main">
         <ItemChips
