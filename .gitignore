@@ -9,3 +9,4 @@ data/forecast-sheet.json
 .DS_Store
 .vite
 artifacts/cursor/
+server-legacy-express/
