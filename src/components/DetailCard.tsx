@@ -65,11 +65,11 @@ export function DetailCard({ detail, itemLabel }: Props) {
         {detail.trend ? (
           <ul className="trend-list">
             {detail.trend
-              .split(/\n|·/)
+              .split(/\n|·|●/)
               .map((t) => t.trim())
               .filter(Boolean)
-              .map((t) => (
-                <li key={t.slice(0, 40)}>{t}</li>
+              .map((t, i) => (
+                <li key={`${i}-${t.slice(0, 24)}`}>{t}</li>
               ))}
           </ul>
         ) : (

@@ -18,32 +18,52 @@ export type SheetBundle = {
   monthlies: MonthlyPoint[];
 };
 
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
+/**
+ * Quote-aware CSV parse. Newlines inside "..." stay in the same field/row
+ * (Google Sheet 거래동향 multiline cells).
+ */
+export function parseCsvRecords(csv: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
   let cur = "";
   let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
+
+  for (let i = 0; i < csv.length; i++) {
+    const ch = csv[i];
     if (inQ) {
-      if (ch === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (ch === '"') {
-        inQ = false;
+      if (ch === '"') {
+        if (csv[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQ = false;
+        }
       } else {
         cur += ch;
       }
-    } else if (ch === '"') {
+      continue;
+    }
+
+    if (ch === '"') {
       inQ = true;
     } else if (ch === ",") {
-      out.push(cur);
+      row.push(cur);
       cur = "";
+    } else if (ch === "\n") {
+      row.push(cur);
+      cur = "";
+      if (row.some((c) => c.trim().length > 0)) rows.push(row);
+      row = [];
+    } else if (ch === "\r") {
+      // ignore; handle \r\n via \n
     } else {
       cur += ch;
     }
   }
-  out.push(cur);
-  return out;
+
+  row.push(cur);
+  if (row.some((c) => c.trim().length > 0)) rows.push(row);
+  return rows;
 }
 
 function normalizeHeader(h: string): string {
@@ -76,10 +96,10 @@ export async function fetchSheetCsv(url: string): Promise<string> {
 }
 
 export function parseSheetCsvForItem(csv: string, item: ItemDef): SheetBundle {
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return { dailies: [], monthlies: [] };
+  const records = parseCsvRecords(csv);
+  if (records.length < 2) return { dailies: [], monthlies: [] };
 
-  const headers = splitCsvLine(lines[0]).map(normalizeHeader);
+  const headers = records[0].map(normalizeHeader);
   const idx = (name: string) => headers.findIndex((h) => h === name);
   const iDate = idx("날짜");
   const iCode = idx("품목코드");
@@ -95,8 +115,8 @@ export function parseSheetCsvForItem(csv: string, item: ItemDef): SheetBundle {
   const dailies: SheetDailyRow[] = [];
   const monthlies: MonthlyPoint[] = [];
 
-  for (let r = 1; r < lines.length; r++) {
-    const cols = splitCsvLine(lines[r]);
+  for (let r = 1; r < records.length; r++) {
+    const cols = records[r];
     const code = (cols[iCode] ?? "").trim();
     const name = (cols[iName] ?? "").trim();
     if (code !== item.id && name !== item.name) continue;
@@ -132,15 +152,15 @@ export function parseSheetCsvForItem(csv: string, item: ItemDef): SheetBundle {
 }
 
 export function itemIdsInSheet(csv: string): string[] {
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length < 2) return [];
-  const headers = splitCsvLine(lines[0]).map(normalizeHeader);
+  const records = parseCsvRecords(csv);
+  if (records.length < 2) return [];
+  const headers = records[0].map(normalizeHeader);
   const iCode = headers.findIndex((h) => h === "품목코드");
   const iName = headers.findIndex((h) => h === "품목명");
   const ids = new Set<string>();
 
-  for (let r = 1; r < lines.length; r++) {
-    const cols = splitCsvLine(lines[r]);
+  for (let r = 1; r < records.length; r++) {
+    const cols = records[r];
     const code = (cols[iCode] ?? "").trim();
     const name = (cols[iName] ?? "").trim();
     if (code && findItemById(code)) ids.add(code);

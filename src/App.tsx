@@ -83,16 +83,6 @@ export default function App() {
     return catalog;
   }, [catalog, availableIds]);
 
-  const aiFromLatest = useMemo(() => {
-    if (!data?.metaByDate) return { action: null as string | null, summary: null as string | null };
-    const entries = Object.entries(data.metaByDate).sort(([a], [b]) => b.localeCompare(a));
-    const hit = entries.find(([, m]) => m.buyAction || m.aiSummary);
-    return {
-      action: hit?.[1].buyAction || null,
-      summary: hit?.[1].aiSummary || null,
-    };
-  }, [data?.metaByDate]);
-
   function selectDate(date: string) {
     if (!data) return;
     const point = data.points.find((p) => p.date === date);
@@ -183,8 +173,8 @@ export default function App() {
             />
             <DetailCard detail={detail} itemLabel={itemLabel} />
             <AiCard
-              action={detail?.buyAction || aiFromLatest.action}
-              summary={detail?.aiSummary || aiFromLatest.summary}
+              action={detail?.buyAction ?? null}
+              summary={detail?.aiSummary ?? null}
             />
           </>
         ) : null}
