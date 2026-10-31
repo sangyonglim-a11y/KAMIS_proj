@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.env.local
+data/forecast-sheet.json
+*.log
+.DS_Store
+.vite
+artifacts/cursor/
