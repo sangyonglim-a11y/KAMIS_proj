@@ -13,6 +13,12 @@ npm run dev
 - 웹: http://127.0.0.1:5173 (Vite, `/api` → 3001 프록시)
 - API: http://127.0.0.1:3001
 
+## Vercel
+
+Express는 `api/index.ts` 서버리스 함수로 배포됩니다. `vercel.json`이 `/api/*`를 그 함수로 rewrite합니다.
+
+프로젝트 환경 변수에 로컬과 동일하게 `SHEET_CSV_URL` 등을 넣으세요 (`.env.local`은 커밋되지 않음).
+
 ## 환경 변수 (서버 전용)
 
 | 변수 | 역할 |
